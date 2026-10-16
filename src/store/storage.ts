@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { type GameState, migrateGame } from '@/engine/game';
 import { type GameRecord } from '@/engine/records';
+import { type TutorialStep } from '@/engine/tutorial';
 
 const SAVE_KEY = 'stock-sim/current-game';
 
@@ -36,16 +37,25 @@ export type Profile = {
   records: GameRecord[];
   /** 업적 id → 달성 시각과 달성한 게임 id */
   achievements: Record<string, { at: number; gameId: number }>;
+  /** 진행 중인 튜토리얼 단계 (없으면 null) */
+  tutorial: TutorialStep | null;
+  /** 튜토리얼을 끝냈거나 건너뛰었는지 */
+  tutorialDone: boolean;
 };
 
-export const EMPTY_PROFILE: Profile = { records: [], achievements: {} };
+export const EMPTY_PROFILE: Profile = { records: [], achievements: {}, tutorial: null, tutorialDone: false };
 
 export async function loadProfile(): Promise<Profile> {
   try {
     const raw = await AsyncStorage.getItem(PROFILE_KEY);
     if (!raw) return EMPTY_PROFILE;
     const profile = JSON.parse(raw) as Partial<Profile>;
-    return { records: profile.records ?? [], achievements: profile.achievements ?? {} };
+    return {
+      records: profile.records ?? [],
+      achievements: profile.achievements ?? {},
+      tutorial: profile.tutorial ?? null,
+      tutorialDone: profile.tutorialDone ?? false,
+    };
   } catch (error) {
     console.warn('Failed to load profile', error);
     return EMPTY_PROFILE;

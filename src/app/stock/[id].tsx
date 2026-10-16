@@ -8,7 +8,7 @@ import { LineChart } from '@/components/line-chart';
 import { NewsRow } from '@/components/news-list';
 import { PendingOrders } from '@/components/pending-orders';
 import { ThemedText } from '@/components/themed';
-import { Button, Card, ChangeText, Chip, PnlText, Row } from '@/components/ui';
+import { Button, Card, ChangeText, Chip, PnlText, Row, TermLabel } from '@/components/ui';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { TICKS_PER_DAY } from '@/engine/config';
 import { dividendPerShare, nextDividendDay } from '@/engine/dividend';
@@ -112,9 +112,9 @@ export default function StockScreen() {
           <Card>
             <ThemedText type="heading">내 보유</ThemedText>
             <Row label="보유 수량">{`${formatNumber(holding.quantity)}주`}</Row>
-            <Row label="평균 매입가">{formatWon(holding.avgPrice)}</Row>
+            <Row label="평균 매입가" term="avg_price">{formatWon(holding.avgPrice)}</Row>
             <Row label="평가금액">{formatWon(stock.price * holding.quantity)}</Row>
-            <Row label="평가손익">
+            <Row label="평가손익" term="unrealized_pnl">
               <PnlText
                 type="smallBold"
                 amount={(stock.price - holding.avgPrice) * holding.quantity}
@@ -128,8 +128,8 @@ export default function StockScreen() {
 
         <Card>
           <ThemedText type="heading">시세</ThemedText>
-          <Row label="전일 종가">{formatWon(stock.prevClose)}</Row>
-          <Row label="시가">{formatWon(stock.open)}</Row>
+          <Row label="전일 종가" term="prev_close">{formatWon(stock.prevClose)}</Row>
+          <Row label="시가" term="ohlc">{formatWon(stock.open)}</Row>
           <Row label="고가">
             <ThemedText type="smallBold" color={theme.up}>
               {formatWon(stock.high)}
@@ -140,12 +140,14 @@ export default function StockScreen() {
               {formatWon(stock.low)}
             </ThemedText>
           </Row>
-          <Row label="상한가 / 하한가">{`${formatNumber(limits.upper)} / ${formatNumber(limits.lower)}`}</Row>
+          <Row label="상한가 / 하한가" term="price_limit">{`${formatNumber(limits.upper)} / ${formatNumber(limits.lower)}`}</Row>
         </Card>
 
         {relatedNews.length > 0 && (
           <Card>
-            <ThemedText type="heading">관련 뉴스</ThemedText>
+            <TermLabel type="heading" term="news_impact">
+              관련 뉴스
+            </TermLabel>
             {relatedNews.map((item) => (
               <NewsRow key={item.id} item={item} linkToStock={false} />
             ))}
@@ -153,10 +155,12 @@ export default function StockScreen() {
         )}
 
         <Card>
-          <ThemedText type="heading">배당</ThemedText>
+          <TermLabel type="heading" term="dividend">
+            배당
+          </TermLabel>
           {def.dividendYield > 0 ? (
             <>
-              <Row label="연 배당수익률">{`${(def.dividendYield * 100).toFixed(1)}% (분기 배당)`}</Row>
+              <Row label="연 배당수익률" term="dividend_yield">{`${(def.dividendYield * 100).toFixed(1)}% (분기 배당)`}</Row>
               <Row label="다음 배당일">
                 {`${formatDay(dividendDay)} 장 마감${dividendDay === day ? ' (오늘)' : ` (D-${dividendDay - day})`}`}
               </Row>

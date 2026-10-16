@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed';
-import { Button, Card, ChangeText, Chip, Row } from '@/components/ui';
+import { Button, Card, ChangeText, Chip, Row, TermLabel } from '@/components/ui';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { FEE_RATE, SELL_TAX_RATE } from '@/engine/config';
 import { formatNumber, formatWon } from '@/engine/format';
@@ -124,13 +124,13 @@ export default function OrderScreen() {
       </View>
 
       <Card>
-        <Row label="현재가">
+        <Row label="현재가" term={type === 'market' ? 'market_order' : 'tick_size'}>
           <View style={styles.price}>
             <ThemedText type="smallBold">{formatWon(stock.price)}</ThemedText>
             <ChangeText type="caption" rate={changeRate(stock)} />
           </View>
         </Row>
-        <Row label={side === 'buy' ? '주문 가능 현금' : '주문 가능 수량'}>
+        <Row label={side === 'buy' ? '주문 가능 현금' : '주문 가능 수량'} term={side === 'buy' ? 'orderable_cash' : 'pending_order'}>
           {side === 'buy' ? formatWon(cash) : `${formatNumber(shares)}주`}
         </Row>
         <Row label={`최대 ${sideLabel} 가능`}>{`${formatNumber(maxQuantity)}주`}</Row>
@@ -138,9 +138,11 @@ export default function OrderScreen() {
 
       {type === 'limit' && (
         <View>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.label}>
-            지정가 (하한가 {formatNumber(limits.lower)} ~ 상한가 {formatNumber(limits.upper)})
-          </ThemedText>
+          <View style={styles.label}>
+            <TermLabel type="small" themeColor="textSecondary" term="limit_order">
+              지정가 (하한가 {formatNumber(limits.lower)} ~ 상한가 {formatNumber(limits.upper)})
+            </TermLabel>
+          </View>
           <View style={styles.stepper}>
             <StepButton
               label="−"
@@ -207,8 +209,8 @@ export default function OrderScreen() {
 
       <Card>
         <Row label="주문 금액">{formatWon(amount)}</Row>
-        <Row label={`수수료 (${(FEE_RATE * 100).toFixed(3)}%)`}>{formatWon(fee)}</Row>
-        {side === 'sell' && <Row label={`거래세 (${(SELL_TAX_RATE * 100).toFixed(2)}%)`}>{formatWon(tax)}</Row>}
+        <Row label={`수수료 (${(FEE_RATE * 100).toFixed(3)}%)`} term="fee">{formatWon(fee)}</Row>
+        {side === 'sell' && <Row label={`거래세 (${(SELL_TAX_RATE * 100).toFixed(2)}%)`} term="sell_tax">{formatWon(tax)}</Row>}
         <Row label={side === 'buy' ? '총 결제 금액' : '예상 정산 금액'}>
           <ThemedText type="smallBold" color={sideColor}>
             {formatWon(total)}
@@ -271,6 +273,8 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.three,
+    // 튜토리얼 안내 카드에 주문 버튼이 가려지지 않도록 아래 여백을 넉넉히 둔다.
+    paddingBottom: Spacing.six * 3,
     gap: Spacing.three,
     width: '100%',
     maxWidth: MaxContentWidth,

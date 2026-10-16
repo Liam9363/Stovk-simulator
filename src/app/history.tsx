@@ -52,14 +52,14 @@ export default function HistoryScreen() {
       ListHeaderComponent={
         <View style={styles.header}>
           <Card>
-            <Row label="실현손익 (매도)">
+            <Row label="실현손익 (매도)" term="realized_pnl">
               <ThemedText type="smallBold" color={realizedColor}>
                 {formatSignedNumber(totals.realizedPnl)}원
               </ThemedText>
             </Row>
-            <Row label="받은 배당금 (세후)">{formatWon(totals.dividendsNet)}</Row>
-            <Row label="낸 수수료">{formatWon(totals.fees)}</Row>
-            <Row label="낸 세금 (거래세·배당세)">{formatWon(totals.taxes)}</Row>
+            <Row label="받은 배당금 (세후)" term="dividend_tax">{formatWon(totals.dividendsNet)}</Row>
+            <Row label="낸 수수료" term="fee">{formatWon(totals.fees)}</Row>
+            <Row label="낸 세금 (거래세·배당세)" term="sell_tax">{formatWon(totals.taxes)}</Row>
           </Card>
           <View style={styles.filters}>
             {FILTERS.map((f) => (

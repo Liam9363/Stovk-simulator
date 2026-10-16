@@ -3,9 +3,11 @@ import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { formatRate, formatSignedNumber } from '@/engine/format';
+import { type TermId } from '@/engine/glossary';
 import { type Grade } from '@/engine/modes';
 import { useChangeColor, useTheme } from '@/hooks/use-theme';
 
+import { TermInfo } from './term-info';
 import { ThemedText, type ThemedTextProps } from './themed';
 
 export function Card({ style, ...rest }: ViewProps) {
@@ -93,18 +95,37 @@ export function PnlText({ amount, rate, ...rest }: { amount: number; rate: numbe
   );
 }
 
-export function Row({ label, children }: { label: string; children: ReactNode }) {
+/** 라벨 + 값 한 줄. `term`을 주면 라벨 옆에 용어 설명(ⓘ)이 붙는다. */
+export function Row({ label, term, children }: { label: string; term?: TermId; children: ReactNode }) {
   return (
     <View style={styles.row}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {label}
-      </ThemedText>
+      <View style={styles.label}>
+        <ThemedText type="small" themeColor="textSecondary">
+          {label}
+        </ThemedText>
+        {term && <TermInfo term={term} />}
+      </View>
       {typeof children === 'string' ? <ThemedText type="smallBold">{children}</ThemedText> : children}
     </View>
   );
 }
 
+/** 제목·라벨 텍스트 + 용어 설명(ⓘ). */
+export function TermLabel({ term, children, ...rest }: { term: TermId; children: ReactNode } & ThemedTextProps) {
+  return (
+    <View style={styles.label}>
+      <ThemedText {...rest}>{children}</ThemedText>
+      <TermInfo term={term} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  label: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one + Spacing.half,
+  },
   card: {
     borderRadius: Radius.large,
     padding: Spacing.three,

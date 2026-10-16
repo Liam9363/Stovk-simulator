@@ -18,6 +18,7 @@ import { effectWeight, type NewsItem } from '@/engine/news';
 import { type OrderRequest, type OrderResult } from '@/engine/portfolio';
 import { addRecord, buildRecord } from '@/engine/records';
 import { randomSeed } from '@/engine/rng';
+import { type TutorialStep } from '@/engine/tutorial';
 
 import { clearAll, EMPTY_PROFILE, loadGame, loadProfile, type Profile, saveGame, saveProfile } from './storage';
 
@@ -36,7 +37,8 @@ type GameStore = {
   finishedRecordId: number | null;
 
   hydrate: () => Promise<void>;
-  startNewGame: (difficulty: Difficulty, mode: GameMode) => void;
+  /** 새 게임 시작. `withTutorial`이면 시간을 멈추고 튜토리얼을 처음부터 진행한다. */
+  startNewGame: (difficulty: Difficulty, mode: GameMode, withTutorial?: boolean) => void;
   /** 진행 중인 게임을 직접 끝내고 기록을 남긴다. */
   quitGame: () => void;
   tick: () => void;
@@ -46,6 +48,9 @@ type GameStore = {
   setPaused: (paused: boolean) => void;
   dismissNotice: () => void;
   clearFinished: () => void;
+  setTutorialStep: (step: TutorialStep) => void;
+  /** 튜토리얼 종료 (완료 또는 건너뛰기) */
+  endTutorial: () => void;
   resetAll: () => Promise<void>;
   save: () => void;
 };
@@ -95,10 +100,12 @@ export const useGameStore = create<GameStore>((set, get) => {
       set({ game, profile, hydrated: true });
     },
 
-    startNewGame: (difficulty, mode) => {
+    startNewGame: (difficulty, mode, withTutorial = false) => {
       const game = createGame(randomSeed(), difficulty, mode);
-      set({ game, paused: false, speed: 1, notice: null, finishedRecordId: null });
+      const profile: Profile = { ...get().profile, tutorial: withTutorial ? 'pick_stock' : null };
+      set({ game, profile, paused: withTutorial, speed: 1, notice: null, finishedRecordId: null });
       void saveGame(game);
+      void saveProfile(profile);
     },
 
     quitGame: () => {
@@ -141,6 +148,18 @@ export const useGameStore = create<GameStore>((set, get) => {
     setPaused: (paused) => set({ paused }),
     dismissNotice: () => set({ notice: null }),
     clearFinished: () => set({ finishedRecordId: null }),
+
+    setTutorialStep: (step) => {
+      const profile = { ...get().profile, tutorial: step };
+      set({ profile });
+      void saveProfile(profile);
+    },
+
+    endTutorial: () => {
+      const profile = { ...get().profile, tutorial: null, tutorialDone: true };
+      set({ profile });
+      void saveProfile(profile);
+    },
 
     resetAll: async () => {
       await clearAll();

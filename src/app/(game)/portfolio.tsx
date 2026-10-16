@@ -5,7 +5,7 @@ import { LedgerRow } from '@/components/ledger-row';
 import { LineChart } from '@/components/line-chart';
 import { PendingOrders } from '@/components/pending-orders';
 import { ThemedText } from '@/components/themed';
-import { Button, Card, PnlText, Row } from '@/components/ui';
+import { Button, Card, PnlText, Row, TermLabel } from '@/components/ui';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { formatNumber, formatWon } from '@/engine/format';
 import { getStockDef } from '@/engine/market';
@@ -36,9 +36,9 @@ export default function PortfolioScreen() {
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Card>
-        <ThemedText type="small" themeColor="textSecondary">
+        <TermLabel type="small" themeColor="textSecondary" term="return_rate">
           총자산
-        </ThemedText>
+        </TermLabel>
         <ThemedText type="subtitle">{formatWon(summary.totalAssets)}</ThemedText>
         <PnlText type="smallBold" amount={totalPnl} rate={summary.totalAssets / game.startCash - 1} />
         {assetSeries.length > 2 && (
@@ -46,14 +46,16 @@ export default function PortfolioScreen() {
         )}
         <View style={styles.divider} />
         <Row label="현금">{formatWon(summary.cash)}</Row>
-        {orderableCash !== summary.cash && <Row label="ㄴ 주문 가능 현금">{formatWon(orderableCash)}</Row>}
+        {orderableCash !== summary.cash && <Row label="ㄴ 주문 가능 현금" term="orderable_cash">{formatWon(orderableCash)}</Row>}
         <Row label="주식 평가금액">{formatWon(summary.stockValue)}</Row>
         <Row label="시작 자금">{formatWon(game.startCash)}</Row>
       </Card>
 
       <PendingOrders orders={game.portfolio.orders} />
 
-      <ThemedText type="heading">보유 종목</ThemedText>
+      <TermLabel type="heading" term="diversification">
+        보유 종목
+      </TermLabel>
       {summary.positions.length === 0 ? (
         <ThemedText themeColor="textSecondary">
           아직 보유한 주식이 없어요. 마켓에서 종목을 골라 매수해 보세요.
@@ -100,7 +102,7 @@ function PositionCard({ position, weight }: { position: PositionSummary; weight:
           </ThemedText>
           <PnlText type="small" amount={position.pnl} rate={position.returnRate} />
         </View>
-        <Row label="평균 매입가">{formatWon(position.avgPrice)}</Row>
+        <Row label="평균 매입가" term="avg_price">{formatWon(position.avgPrice)}</Row>
         <Row label="현재가">{formatWon(position.price)}</Row>
       </Card>
     </Pressable>

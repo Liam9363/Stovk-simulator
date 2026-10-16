@@ -10,12 +10,14 @@ import { ThemedText } from './themed';
 
 const VISIBLE_MS = 3500;
 
-/** 지정가 체결·배당 등 게임 이벤트를 화면 아래쪽에 잠깐 띄운다. 누르면 바로 닫힌다. */
+/** 지정가 체결·배당 등 게임 이벤트를 화면 아래쪽(튜토리얼 중엔 위쪽)에 잠깐 띄운다. 누르면 바로 닫힌다. */
 export function NoticeToast() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const notice = useGameStore((s) => s.notice);
   const dismiss = useGameStore((s) => s.dismissNotice);
+  // 튜토리얼 안내가 아래쪽을 차지하고 있으면 알림은 위쪽에 띄운다.
+  const tutorialShown = useGameStore((s) => s.profile.tutorial !== null && s.game !== null);
 
   useEffect(() => {
     if (!notice) return;
@@ -28,7 +30,11 @@ export function NoticeToast() {
     <Pressable
       accessibilityRole="alert"
       onPress={dismiss}
-      style={[styles.toast, { bottom: insets.bottom + 72, backgroundColor: theme.text }]}>
+      style={[
+        styles.toast,
+        tutorialShown ? { top: insets.top + Spacing.two } : { bottom: insets.bottom + 72 },
+        { backgroundColor: theme.text },
+      ]}>
       <ThemedText type="smallBold" color={theme.background}>
         {notice.message}
       </ThemedText>

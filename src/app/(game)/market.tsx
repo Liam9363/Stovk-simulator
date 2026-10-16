@@ -4,7 +4,7 @@ import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
 import { LineChart } from '@/components/line-chart';
 import { StockRow } from '@/components/stock-row';
 import { ThemedText } from '@/components/themed';
-import { Card, ChangeText, Chip } from '@/components/ui';
+import { Card, ChangeText, Chip, TermLabel } from '@/components/ui';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { TICKS_PER_DAY } from '@/engine/config';
 import { formatIndex } from '@/engine/format';
@@ -53,9 +53,9 @@ export default function MarketScreen() {
       ListHeaderComponent={
         <View style={styles.header}>
           <Card>
-            <ThemedText type="small" themeColor="textSecondary">
+            <TermLabel type="small" themeColor="textSecondary" term="market_index">
               가상 종합지수
-            </ThemedText>
+            </TermLabel>
             <View style={styles.indexRow}>
               <ThemedText type="subtitle" color={indexColor}>
                 {formatIndex(index)}

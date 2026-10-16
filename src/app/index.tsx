@@ -83,6 +83,8 @@ export default function HomeScreen() {
             />
           </View>
 
+          <Button title="용어 사전" variant="secondary" onPress={() => router.push('/glossary')} />
+
           <Pressable accessibilityRole="button" onPress={reset} style={styles.reset}>
             <ThemedText type="caption" themeColor="textSecondary">
               전체 데이터 초기화

@@ -8,7 +8,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useGameStore } from '@/store/game-store';
 
 import { ThemedText } from './themed';
-import { Card } from './ui';
+import { Card, TermLabel } from './ui';
 
 type Props = {
   orders: PendingOrder[];
@@ -24,7 +24,9 @@ export function PendingOrders({ orders, showStockName = true }: Props) {
 
   return (
     <Card>
-      <ThemedText type="heading">미체결 주문</ThemedText>
+      <TermLabel type="heading" term="pending_order">
+        미체결 주문
+      </TermLabel>
       {orders.map((order) => (
         <View key={order.id} style={styles.row}>
           <View style={styles.main}>

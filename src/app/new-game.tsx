@@ -33,6 +33,8 @@ const MODE_OPTIONS: { type: ModeType; title: string; description: string }[] = [
 
 export default function NewGameScreen() {
   const startNewGame = useGameStore((s) => s.startNewGame);
+  const tutorialDone = useGameStore((s) => s.profile.tutorialDone);
+  const [withTutorial, setWithTutorial] = useState(!tutorialDone);
   const [modeType, setModeType] = useState<ModeType>('period');
   const [periodDays, setPeriodDays] = useState<PeriodDays>(62);
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
@@ -49,7 +51,7 @@ export default function NewGameScreen() {
     setStarting(true);
     // 시장 생성(워밍업 시뮬레이션)이 동기 작업이라 로딩 표시가 먼저 그려지도록 한 프레임 미룬다.
     setTimeout(() => {
-      startNewGame(difficulty, mode);
+      startNewGame(difficulty, mode, withTutorial);
       router.dismissTo('/market');
     }, 16);
   };
@@ -96,6 +98,14 @@ export default function NewGameScreen() {
         );
       })}
 
+      <Option
+        selected={withTutorial}
+        onPress={() => setWithTutorial(!withTutorial)}
+        title={withTutorial ? '✓ 튜토리얼과 함께 시작' : '튜토리얼 없이 시작'}
+        description="종목 고르기부터 매수·매도까지 단계별로 안내해요. 처음이라면 켜 두세요."
+        role="checkbox"
+      />
+
       <ThemedText type="caption" themeColor="textSecondary" style={styles.note}>
         게임 속 하루는 1배속 기준 1분입니다. 화면 위쪽에서 배속과 일시정지를 조절할 수 있어요.
       </ThemedText>
@@ -112,14 +122,15 @@ type OptionProps = {
   description: string;
   badge?: string;
   children?: ReactNode;
+  role?: 'radio' | 'checkbox';
 };
 
-function Option({ selected, onPress, title, description, badge, children }: OptionProps) {
+function Option({ selected, onPress, title, description, badge, children, role = 'radio' }: OptionProps) {
   const theme = useTheme();
   return (
     <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ selected }}
+      accessibilityRole={role}
+      accessibilityState={role === 'checkbox' ? { checked: selected } : { selected }}
       onPress={onPress}
       style={[
         styles.option,
