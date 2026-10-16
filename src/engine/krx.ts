@@ -32,3 +32,10 @@ export function priceLimits(prevClose: number): { upper: number; lower: number }
   const lower = Math.max(1, Math.ceil(rawLower / lowerTick) * lowerTick);
   return { upper, lower };
 }
+
+/** 호가 한 단계 위/아래 가격. 아래로 갈 때는 낮은 가격대의 호가 단위를 쓴다. */
+export function stepPrice(price: number, direction: 1 | -1): number {
+  if (direction === 1) return roundToTick(price) + tickSize(price);
+  const lower = roundToTick(price) - tickSize(price - 1);
+  return Math.max(1, lower);
+}

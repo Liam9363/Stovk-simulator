@@ -16,6 +16,7 @@ import {
   TRADING_DAYS_PER_YEAR,
   WARMUP_DAYS,
 } from './config';
+import { dividendPerShare, isDividendDay } from './dividend';
 import { priceLimits, roundToTick } from './krx';
 import { Rng, type RngState } from './rng';
 import { SECTORS, type SectorId, STOCKS, STOCK_BY_ID } from './stocks';
@@ -126,20 +127,32 @@ export function advanceTick(market: MarketState): MarketState {
   return next;
 }
 
-/** 장 마감: 일봉을 기록하고 다음 거래일을 연다. `market`을 직접 변경한다. */
+/** 장 마감: 일봉을 기록하고(배당락 반영) 다음 거래일을 연다. `market`을 직접 변경한다. */
 function closeDay(market: MarketState) {
   const closingIndex = marketIndex(market);
   market.indexHistory = [...market.indexHistory, closingIndex];
   market.indexIntraday = [closingIndex];
   for (const def of STOCKS) {
     const stock = market.stocks[def.id];
-    const candle = { open: stock.open, high: stock.high, low: stock.low, close: stock.price };
+    const close = stock.price;
+    const candle = { open: stock.open, high: stock.high, low: stock.low, close };
     stock.history = [...stock.history, candle];
-    stock.prevClose = stock.price;
-    stock.open = stock.price;
-    stock.high = stock.price;
-    stock.low = stock.price;
-    stock.intraday = [stock.price];
+
+    // 배당락: 다음 거래일 기준가를 주당 배당금만큼 낮춘다.
+    let base = close;
+    if (isDividendDay(market.day)) {
+      const dps = dividendPerShare(def, close);
+      if (dps > 0) {
+        base = Math.max(1, roundToTick(close - dps));
+        stock.fair *= base / close;
+      }
+    }
+    stock.prevClose = base;
+    stock.price = base;
+    stock.open = base;
+    stock.high = base;
+    stock.low = base;
+    stock.intraday = [base];
   }
   market.day += 1;
   market.tick = 0;

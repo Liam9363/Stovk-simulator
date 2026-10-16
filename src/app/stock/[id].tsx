@@ -5,11 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GameHud } from '@/components/game-hud';
 import { LineChart } from '@/components/line-chart';
+import { PendingOrders } from '@/components/pending-orders';
 import { ThemedText } from '@/components/themed';
 import { Button, Card, ChangeText, Chip, PnlText, Row } from '@/components/ui';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { TICKS_PER_DAY } from '@/engine/config';
-import { formatNumber, formatWon } from '@/engine/format';
+import { dividendPerShare, nextDividendDay } from '@/engine/dividend';
+import { formatDay, formatNumber, formatWon } from '@/engine/format';
 import { priceLimits } from '@/engine/krx';
 import { changeRate } from '@/engine/market';
 import { type TradeSide } from '@/engine/portfolio';
@@ -32,6 +34,8 @@ export default function StockScreen() {
   const def = STOCK_BY_ID[id];
   const stock = useGameStore((s) => (def ? s.game?.market.stocks[def.id] : undefined));
   const holding = useGameStore((s) => (def ? s.game?.portfolio.holdings[def.id] : undefined));
+  const orders = useGameStore((s) => s.game?.portfolio.orders);
+  const day = useGameStore((s) => s.game?.market.day ?? 1);
   const [range, setRange] = useState<Range>('today');
   const rate = stock ? changeRate(stock) : 0;
   const color = useChangeColor(rate);
@@ -54,6 +58,9 @@ export default function StockScreen() {
     range === 'today' ? color : chartData[chartData.length - 1] >= chartData[0] ? theme.up : theme.down;
   const limits = priceLimits(stock.prevClose);
   const diff = stock.price - stock.prevClose;
+  const stockOrders = (orders ?? []).filter((o) => o.stockId === def.id);
+  const dividendDay = nextDividendDay(day);
+  const expectedDps = dividendPerShare(def, stock.price);
 
   const openOrder = (side: TradeSide) =>
     router.push({ pathname: '/order', params: { id: def.id, side } });
@@ -108,6 +115,8 @@ export default function StockScreen() {
           </Card>
         )}
 
+        <PendingOrders orders={stockOrders} showStockName={false} />
+
         <Card>
           <ThemedText type="heading">시세</ThemedText>
           <Row label="전일 종가">{formatWon(stock.prevClose)}</Row>
@@ -123,6 +132,30 @@ export default function StockScreen() {
             </ThemedText>
           </Row>
           <Row label="상한가 / 하한가">{`${formatNumber(limits.upper)} / ${formatNumber(limits.lower)}`}</Row>
+        </Card>
+
+        <Card>
+          <ThemedText type="heading">배당</ThemedText>
+          {def.dividendYield > 0 ? (
+            <>
+              <Row label="연 배당수익률">{`${(def.dividendYield * 100).toFixed(1)}% (분기 배당)`}</Row>
+              <Row label="다음 배당일">
+                {`${formatDay(dividendDay)} 장 마감${dividendDay === day ? ' (오늘)' : ` (D-${dividendDay - day})`}`}
+              </Row>
+              <Row label="예상 주당 배당금">{formatWon(expectedDps)}</Row>
+              {holding && (
+                <Row label="내 예상 배당금 (세전)">{formatWon(expectedDps * holding.quantity)}</Row>
+              )}
+              <ThemedText type="caption" themeColor="textSecondary">
+                배당일 장 마감 때 보유한 주식에 배당금이 지급되고(배당소득세 15.4% 원천징수), 다음
+                거래일 기준가는 배당금만큼 낮아집니다(배당락).
+              </ThemedText>
+            </>
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary">
+              배당을 하지 않는 성장주입니다.
+            </ThemedText>
+          )}
         </Card>
 
         <Card>

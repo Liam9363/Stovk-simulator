@@ -52,3 +52,15 @@ export const INDEX_BASE = 1_000;
 
 export const GAME_SPEEDS = [1, 2, 4] as const;
 export type GameSpeed = (typeof GAME_SPEEDS)[number];
+
+/** 매매 수수료율 (매수·매도 각각, 원 미만 버림). */
+export const FEE_RATE = 0.00015;
+
+/** 매도 시 증권거래세율 (원 미만 버림). */
+export const SELL_TAX_RATE = 0.0018;
+
+/** 배당소득세율 (원 미만 버림). */
+export const DIVIDEND_TAX_RATE = 0.154;
+
+/** 배당 주기: 분기 = 연간 거래일의 1/4. */
+export const DIVIDEND_INTERVAL_DAYS = 62;

@@ -1,4 +1,4 @@
-import { isOnTick, priceLimits, roundToTick, tickSize } from '../krx';
+import { isOnTick, priceLimits, roundToTick, stepPrice, tickSize } from '../krx';
 
 describe('tickSize', () => {
   it.each([
@@ -45,5 +45,14 @@ describe('priceLimits', () => {
       expect(upper).toBeLessThanOrEqual(base * 1.3);
       expect(lower).toBeGreaterThanOrEqual(base * 0.7);
     }
+  });
+});
+
+describe('stepPrice', () => {
+  it('moves one tick across band boundaries', () => {
+    expect(stepPrice(19_990, 1)).toBe(20_000);
+    expect(stepPrice(20_000, 1)).toBe(20_050);
+    expect(stepPrice(20_000, -1)).toBe(19_990);
+    expect(stepPrice(1, -1)).toBe(1);
   });
 });

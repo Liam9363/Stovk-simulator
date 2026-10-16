@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { NoticeToast } from '@/components/notice-toast';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useGameClock } from '@/hooks/use-game-clock';
 import { useTheme } from '@/hooks/use-theme';
@@ -44,7 +45,9 @@ export default function RootLayout() {
         <Stack.Screen name="(game)" options={{ headerShown: false }} />
         <Stack.Screen name="stock/[id]" options={{ title: '' }} />
         <Stack.Screen name="order" options={{ presentation: 'modal', title: '주문' }} />
+        <Stack.Screen name="history" options={{ title: '거래 내역' }} />
       </Stack>
+      <NoticeToast />
     </ThemeProvider>
   );
 }
