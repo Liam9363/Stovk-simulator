@@ -178,7 +178,7 @@
 - React Native + **Expo** (TypeScript), Expo Router
 - 상태 관리: Zustand
 - 로컬 저장: AsyncStorage (필요 시 expo-sqlite)
-- 차트: react-native-wagmi-charts 또는 victory-native (구현 시 검토)
+- 차트: react-native-svg로 직접 그린 경량 라인 차트 (외부 차트 라이브러리 미사용)
 - 테스트: Jest
 - 게임 로직(시세 엔진·주문·정산)은 UI와 분리된 순수 TypeScript 모듈로 작성
 
@@ -196,4 +196,4 @@
 ---
 
 ## 10. 남은 미결정 사항
-- 차트 라이브러리 선택 (구현 단계에서 결정)
+- 없음
