@@ -7,6 +7,10 @@ export type DifficultyConfig = {
   startCash: number;
   /** 전체 변동성 배수 */
   volatility: number;
+  /** 뉴스 중 악재 비율 */
+  badNewsRatio: number;
+  /** 뉴스 충격 크기 배수 */
+  newsImpact: number;
   description: string;
 };
 
@@ -15,18 +19,24 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     label: '쉬움',
     startCash: 30_000_000,
     volatility: 0.7,
+    badNewsRatio: 0.45,
+    newsImpact: 0.5,
     description: '넉넉한 자금, 잔잔한 시장',
   },
   normal: {
     label: '보통',
     startCash: 10_000_000,
     volatility: 1,
+    badNewsRatio: 0.5,
+    newsImpact: 0.6,
     description: '표준 자금과 변동성',
   },
   hard: {
     label: '어려움',
     startCash: 3_000_000,
     volatility: 1.4,
+    badNewsRatio: 0.55,
+    newsImpact: 0.75,
     description: '적은 자금, 거친 시장',
   },
 };

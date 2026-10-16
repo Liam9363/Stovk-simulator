@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { type GameState, migrateGame } from '@/engine/game';
+import { type GameRecord } from '@/engine/records';
 
 const SAVE_KEY = 'stock-sim/current-game';
 
@@ -25,5 +26,45 @@ export async function saveGame(game: GameState | null): Promise<void> {
     }
   } catch (error) {
     console.warn('Failed to save game', error);
+  }
+}
+
+const PROFILE_KEY = 'stock-sim/profile';
+
+/** 게임 간에 누적되는 데이터: 지난 게임 기록과 업적. */
+export type Profile = {
+  records: GameRecord[];
+  /** 업적 id → 달성 시각과 달성한 게임 id */
+  achievements: Record<string, { at: number; gameId: number }>;
+};
+
+export const EMPTY_PROFILE: Profile = { records: [], achievements: {} };
+
+export async function loadProfile(): Promise<Profile> {
+  try {
+    const raw = await AsyncStorage.getItem(PROFILE_KEY);
+    if (!raw) return EMPTY_PROFILE;
+    const profile = JSON.parse(raw) as Partial<Profile>;
+    return { records: profile.records ?? [], achievements: profile.achievements ?? {} };
+  } catch (error) {
+    console.warn('Failed to load profile', error);
+    return EMPTY_PROFILE;
+  }
+}
+
+export async function saveProfile(profile: Profile): Promise<void> {
+  try {
+    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  } catch (error) {
+    console.warn('Failed to save profile', error);
+  }
+}
+
+/** 기록과 업적을 모두 지운다 (설정 > 전체 초기화). */
+export async function clearAll(): Promise<void> {
+  try {
+    await AsyncStorage.multiRemove([SAVE_KEY, PROFILE_KEY]);
+  } catch (error) {
+    console.warn('Failed to clear data', error);
   }
 }

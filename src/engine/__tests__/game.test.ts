@@ -1,8 +1,11 @@
 import { DIVIDEND_INTERVAL_DAYS, TICKS_PER_DAY } from '../config';
 import { dividendPerShare, isDividendDay, nextDividendDay } from '../dividend';
 import { createGame, type GameEvent, type GameState, migrateGame, submitOrder, tickGame, totalAssets } from '../game';
+import { type GameMode } from '../modes';
 import { buyCost } from '../portfolio';
 import { STOCK_BY_ID } from '../stocks';
+
+const ENDLESS: GameMode = { type: 'endless' };
 
 function advance(game: GameState, ticks: number) {
   const events: GameEvent[] = [];
@@ -38,7 +41,7 @@ describe('dividend schedule', () => {
 
 describe('tickGame', () => {
   it('fills market orders at the current price and records assets per day', () => {
-    const game = createGame(123, 'normal', 0);
+    const game = createGame(123, 'normal', ENDLESS, 0);
     const price = game.market.stocks.HSIN.price;
     const { game: afterBuy, result } = submitOrder(game, {
       stockId: 'HSIN',
@@ -55,7 +58,7 @@ describe('tickGame', () => {
   });
 
   it('fills a pending limit order during the day or cancels it at the close', () => {
-    let game = createGame(77, 'hard', 0);
+    let game = createGame(77, 'hard', ENDLESS, 0);
     const stock = game.market.stocks.NRCH;
     // 현재가보다 한참 낮은 매수 주문은 대개 체결되지 않고 장 마감에 취소된다.
     const lowPrice = Math.ceil((stock.prevClose * 0.71) / 10) * 10;
@@ -70,7 +73,7 @@ describe('tickGame', () => {
   });
 
   it('pays dividends and applies the ex-dividend price on the dividend day', () => {
-    let game = createGame(5, 'easy', 0);
+    let game = createGame(5, 'easy', ENDLESS, 0);
     game = advanceToDay(game, DIVIDEND_INTERVAL_DAYS).game;
     game = submitOrder(game, { stockId: 'PRNG', side: 'buy', type: 'market', quantity: 10 }).game;
 
@@ -91,8 +94,8 @@ describe('tickGame', () => {
 });
 
 describe('migrateGame', () => {
-  it('upgrades v1 saves', () => {
-    const current = createGame(1, 'normal', 0);
+  it('upgrades v1 saves through v2 to the current version', () => {
+    const current = createGame(1, 'normal', ENDLESS, 0);
     const v1 = {
       ...current,
       version: 1,
@@ -108,6 +111,9 @@ describe('migrateGame', () => {
     expect(migrated.portfolio.dividends).toEqual([]);
     expect(migrated.portfolio.nextId).toBe(4);
     expect(migrated.portfolio.trades[0]).toMatchObject({ orderType: 'market', fee: 0, tax: 0 });
+    expect(migrated.mode).toEqual({ type: 'endless' });
+    expect(migrated.result).toBeNull();
+    expect(migrated.market.news).toEqual([]);
   });
 
   it('rejects unknown saves', () => {

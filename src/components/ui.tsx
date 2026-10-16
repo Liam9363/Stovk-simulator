@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { formatRate, formatSignedNumber } from '@/engine/format';
+import { type Grade } from '@/engine/modes';
 import { useChangeColor, useTheme } from '@/hooks/use-theme';
 
 import { ThemedText, type ThemedTextProps } from './themed';
@@ -73,7 +74,8 @@ export function Chip({ label, selected, onPress }: ChipProps) {
 
 /** 등락률 텍스트 (색상 포함). */
 export function ChangeText({ rate, ...rest }: { rate: number } & ThemedTextProps) {
-  const color = useChangeColor(rate);
+  // 0.00%로 표시될 만큼 작은 변화는 보합 색으로 칠한다.
+  const color = useChangeColor(Math.abs(rate) < 0.00005 ? 0 : rate);
   return (
     <ThemedText color={color} {...rest}>
       {formatRate(rate)}
@@ -125,4 +127,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  grade: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
+
+const GRADE_COLORS: Record<Grade, string> = {
+  S: '#E2A400',
+  A: '#3182F6',
+  B: '#20A86B',
+  C: '#8B95A1',
+  D: '#E8833A',
+  F: '#E8364A',
+};
+
+/** 등급 배지 (S~F). */
+export function GradeBadge({ grade, size = 40 }: { grade: Grade; size?: number }) {
+  return (
+    <View
+      style={[
+        styles.grade,
+        { width: size, height: size, borderRadius: size / 2, backgroundColor: GRADE_COLORS[grade] },
+      ]}>
+      <ThemedText style={{ fontSize: size * 0.5, lineHeight: size * 0.62, fontWeight: 800 }} color="#ffffff">
+        {grade}
+      </ThemedText>
+    </View>
+  );
+}

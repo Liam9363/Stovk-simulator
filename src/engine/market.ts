@@ -18,6 +18,7 @@ import {
 } from './config';
 import { dividendPerShare, isDividendDay } from './dividend';
 import { priceLimits, roundToTick } from './krx';
+import { ageEffects, effectWeight, generateNews, MAX_NEWS, type NewsState } from './news';
 import { Rng, type RngState } from './rng';
 import { SECTORS, type SectorId, STOCKS, STOCK_BY_ID } from './stocks';
 
@@ -38,7 +39,7 @@ export type StockState = {
   history: Candle[];
 };
 
-export type MarketState = {
+export type MarketState = NewsState & {
   /** 현재 거래일 (1일차부터 시작, 워밍업 기간은 0 이하) */
   day: number;
   /** 오늘 진행된 틱 수 (0 ~ TICKS_PER_DAY) */
@@ -103,11 +104,30 @@ export function advanceTick(market: MarketState): MarketState {
     sectorShocks[sector] = SECTOR_VOLATILITY * volMult * SQRT_DT * rng.normal();
   }
 
+  // 뉴스 발생: 즉시 충격은 이번 틱 수익률에 더하고, 추세 효과는 목록에 추가한다.
+  const newsShocks: Record<string, number> = {};
+  const generated = generateNews(rng, next.difficulty, next.day, next.tick + 1, next.nextNewsId);
+  if (generated.length > 0) {
+    next.news = [...next.news, ...generated.map((g) => g.item)].slice(-MAX_NEWS);
+    next.effects = [...next.effects, ...generated.map((g) => g.effect)];
+    next.nextNewsId += generated.length;
+    for (const g of generated) {
+      for (const [id, shock] of Object.entries(g.shocks)) {
+        newsShocks[id] = (newsShocks[id] ?? 0) + shock;
+      }
+    }
+  }
+
   for (const def of STOCKS) {
     const stock = next.stocks[def.id];
     const sigma = def.volatility * volMult;
     const idio = (def.drift - 0.5 * sigma ** 2) * TICK_DT + sigma * SQRT_DT * rng.normal();
-    const logReturn = def.beta * marketShock + sectorShocks[def.sector] + idio;
+    let effectDrift = 0;
+    for (const effect of next.effects) {
+      effectDrift += (effect.dailyDrift * effectWeight(effect, def)) / TICKS_PER_DAY;
+    }
+    const logReturn =
+      def.beta * marketShock + sectorShocks[def.sector] + idio + effectDrift + (newsShocks[def.id] ?? 0);
 
     // 적정가도 가격제한폭 밖으로는 나가지 않게 묶어 둔다 (상한가 이후 급락 방지).
     const { upper, lower } = priceLimits(stock.prevClose);
@@ -154,6 +174,7 @@ function closeDay(market: MarketState) {
     stock.low = base;
     stock.intraday = [base];
   }
+  market.effects = ageEffects(market.effects);
   market.day += 1;
   market.tick = 0;
 }
@@ -185,6 +206,9 @@ export function createMarket(seed: number, difficulty: Difficulty): MarketState 
     stocks,
     indexHistory: [],
     indexIntraday: [],
+    news: [],
+    effects: [],
+    nextNewsId: 1,
   };
   market.indexIntraday = [marketIndex(market)];
   for (let i = 0; i < WARMUP_DAYS * TICKS_PER_DAY; i++) {

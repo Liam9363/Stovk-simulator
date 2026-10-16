@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GameHud } from '@/components/game-hud';
-import { MarketIcon, WalletIcon } from '@/components/tab-icons';
+import { MarketIcon, NewsIcon, WalletIcon } from '@/components/tab-icons';
 import { useTheme } from '@/hooks/use-theme';
 import { useGameStore } from '@/store/game-store';
 
@@ -21,7 +21,9 @@ function Header() {
 export default function GameLayout() {
   const theme = useTheme();
   const hasGame = useGameStore((s) => s.game !== null);
-  if (!hasGame) return <Redirect href="/" />;
+  const finishing = useGameStore((s) => s.finishedRecordId !== null);
+  // 게임이 막 끝났다면 루트 레이아웃이 결과 화면으로 보내 준다.
+  if (!hasGame) return finishing ? null : <Redirect href="/" />;
 
   return (
     <Tabs
@@ -36,6 +38,13 @@ export default function GameLayout() {
         options={{
           title: '마켓',
           tabBarIcon: ({ color }) => <MarketIcon color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="news"
+        options={{
+          title: '뉴스',
+          tabBarIcon: ({ color }) => <NewsIcon color={color} />,
         }}
       />
       <Tabs.Screen

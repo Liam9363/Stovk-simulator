@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GameHud } from '@/components/game-hud';
 import { LineChart } from '@/components/line-chart';
+import { NewsRow } from '@/components/news-list';
 import { PendingOrders } from '@/components/pending-orders';
 import { ThemedText } from '@/components/themed';
 import { Button, Card, ChangeText, Chip, PnlText, Row } from '@/components/ui';
@@ -14,12 +15,15 @@ import { dividendPerShare, nextDividendDay } from '@/engine/dividend';
 import { formatDay, formatNumber, formatWon } from '@/engine/format';
 import { priceLimits } from '@/engine/krx';
 import { changeRate } from '@/engine/market';
+import { isNewsRelated } from '@/engine/news';
 import { type TradeSide } from '@/engine/portfolio';
 import { SECTORS, STOCK_BY_ID } from '@/engine/stocks';
 import { useChangeColor, useTheme } from '@/hooks/use-theme';
 import { useGameStore } from '@/store/game-store';
 
 type Range = 'today' | '1m' | '3m';
+
+const RELATED_NEWS = 5;
 
 const RANGES: { key: Range; label: string; days: number }[] = [
   { key: 'today', label: '오늘', days: 0 },
@@ -35,6 +39,7 @@ export default function StockScreen() {
   const stock = useGameStore((s) => (def ? s.game?.market.stocks[def.id] : undefined));
   const holding = useGameStore((s) => (def ? s.game?.portfolio.holdings[def.id] : undefined));
   const orders = useGameStore((s) => s.game?.portfolio.orders);
+  const news = useGameStore((s) => s.game?.market.news);
   const day = useGameStore((s) => s.game?.market.day ?? 1);
   const [range, setRange] = useState<Range>('today');
   const rate = stock ? changeRate(stock) : 0;
@@ -59,6 +64,10 @@ export default function StockScreen() {
   const limits = priceLimits(stock.prevClose);
   const diff = stock.price - stock.prevClose;
   const stockOrders = (orders ?? []).filter((o) => o.stockId === def.id);
+  const relatedNews = (news ?? [])
+    .filter((item) => isNewsRelated(item, def))
+    .slice(-RELATED_NEWS)
+    .reverse();
   const dividendDay = nextDividendDay(day);
   const expectedDps = dividendPerShare(def, stock.price);
 
@@ -133,6 +142,15 @@ export default function StockScreen() {
           </Row>
           <Row label="상한가 / 하한가">{`${formatNumber(limits.upper)} / ${formatNumber(limits.lower)}`}</Row>
         </Card>
+
+        {relatedNews.length > 0 && (
+          <Card>
+            <ThemedText type="heading">관련 뉴스</ThemedText>
+            {relatedNews.map((item) => (
+              <NewsRow key={item.id} item={item} linkToStock={false} />
+            ))}
+          </Card>
+        )}
 
         <Card>
           <ThemedText type="heading">배당</ThemedText>

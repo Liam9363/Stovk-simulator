@@ -37,6 +37,8 @@ export function formatIndex(value: number): string {
   return value.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+/** 거래일 표시. 게임 시작 전(워밍업) 날짜는 "시작 N일 전"으로 보여준다. */
 export function formatDay(day: number): string {
+  if (day <= 0) return `시작 ${1 - day}일 전`;
   return `${day}일차`;
 }

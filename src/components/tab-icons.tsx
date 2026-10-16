@@ -29,3 +29,13 @@ export function WalletIcon({ color, size = 24 }: IconProps) {
     </Svg>
   );
 }
+
+/** 신문 아이콘 (뉴스 탭). */
+export function NewsIcon({ color, size = 24 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x={3} y={4} width={18} height={16} rx={2} stroke={color} strokeWidth={2} />
+      <Path d="M7 9h10M7 13h10M7 17h6" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}

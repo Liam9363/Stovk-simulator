@@ -5,6 +5,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { GAME_SPEEDS, TICKS_PER_DAY } from '@/engine/config';
 import { formatDay, formatWon } from '@/engine/format';
 import { totalAssets } from '@/engine/game';
+import { modeProgress } from '@/engine/modes';
 import { useTheme } from '@/hooks/use-theme';
 import { useGameStore } from '@/store/game-store';
 
@@ -23,6 +24,7 @@ export function GameHud({ showMenu = false }: { showMenu?: boolean }) {
   if (!game) return null;
   const assets = totalAssets(game);
   const progress = game.market.tick / TICKS_PER_DAY;
+  const modeStatus = modeProgress(game.mode, game.market.day, assets, game.startCash);
 
   return (
     <View style={[styles.container, { borderBottomColor: theme.border }]}>
@@ -67,6 +69,11 @@ export function GameHud({ showMenu = false }: { showMenu?: boolean }) {
         </ThemedText>
         <ThemedText type="smallBold">{formatWon(assets)}</ThemedText>
         <ChangeText type="smallBold" rate={assets / game.startCash - 1} />
+        {modeStatus && (
+          <ThemedText type="caption" themeColor="textSecondary" style={styles.modeStatus} numberOfLines={1}>
+            {modeStatus.label}
+          </ThemedText>
+        )}
       </View>
     </View>
   );
@@ -140,5 +147,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: Spacing.two,
+  },
+  modeStatus: {
+    flex: 1,
+    textAlign: 'right',
   },
 });
